@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PWA-Frame Painter</title>
+  <link rel="stylesheet" type="text/css" href="public/styles/inline.css">
+
+  <link rel="manifest" href="manifest.json">
+
+  <link rel="icon" type="image/ico" href="public/assets/icons/favicon.ico"/>
+
+  <!-- Add to home screen for Safari on iOS -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="PWA-Frame Painter">
+  <link rel="apple-touch-icon" href="public/assets/icons/icon-128x128.png">
+  
+  <meta name="msapplication-TileImage" content="public/assets/icons/icon-128x128.png">
+  <meta name="msapplication-TileColor" content="#2F3BA2">  
+  
+  <script src="public/js/aframe.min.js"></script>
+  <script src="public/js/a-painter-loader-component.min.js"></script>
+  <script src="public/js/script.js"></script>
+</head>
+<body>
+  <header class="header">
+    <h1 class="header__title">Progressive Web A-Painter</h1>
+    <button id="butQRCode" class="headerButton" title="Get page QR code"></button>
+    <button id="butLoad" class="headerButton" title="Load model"></button>
+  </header>
+
+  <div id="qrcodeDiv">
+    <span class="small close rounded heavy"></span>
+    <div id="qrcode"></div>
+  </div>
+
+  <div class="dialog-container">
+    <div class="dialog">
+      <div class="dialog-title">Load a model's URL</div>
+      <div class="dialog-body">
+        <input id="loadURL" type="text" placeholder="Enter an A-Painter model valid URL"></input>
+      </div>
+      <div class="dialog-buttons">
+        <button id="butLoadURL" class="button">Load</button>
+        <button id="butLoadCancel" class="button">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <a-scene fog="color: #bc483e; near: 0; far: 65;">
+    <a-entity position="0 0 -0.5">
+      <!-- Environment -->
+      <a-entity id="sky"
+                geometry="primitive: sphere; radius: 65;"
+                material="shader: skyGradient; colorTop: #353449; colorBottom: #BC483E; side: back"></a-entity>
+      <a-entity ground></a-entity>
+      <a-entity light="type: point; color: #f4f4f4; intensity: 0.2; distance: 0" position="8 10 18"></a-entity>
+      <a-entity light="type: point; color: #f4f4f4; intensity: 0.6; distance: 0" position="-8 10 -18"></a-entity>
+      <a-entity light="type: ambient; color: #f4f4f4; intensity: 0.4;" position="-8 10 -18"></a-entity>
+    </a-entity>
+  </a-scene>
+
+  <script src="public/js/qrcode.js"></script>
+  <script src="public/js/ui-script.js"></script>
+</body>
+</html>
