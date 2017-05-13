@@ -3,7 +3,7 @@
 
 //cacheVersion needs to be updated at each code iteration,
 //in order to replace the former cache in the browser
-var cacheVersion = 'PWA-Frame-Painter-v3';
+var cacheVersion = 'PWA-Frame-Painter-v4';
 
 //List of the files representing the App shell
 //i.e. what's needed for the app to launch
