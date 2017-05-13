@@ -4,8 +4,11 @@
 (function(){
 	"use strict";
   var Util = require("./util.js");
+  var ModelManager = require("./modelManager.js");
   //Handling the AFrame components in a different file for clarity
   require("./aframeComponents.js");
+
+  new ModelManager();
 
   window.onload = function(){
     /**

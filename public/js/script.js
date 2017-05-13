@@ -77,14 +77,69 @@
   });
 })();
 },{}],2:[function(require,module,exports){
+var DBManager;
+(function(){
+  "use strict";
+
+  /**
+   * Object to handle data storage in an IndexedDB
+   */
+  DBManager = function(opts){
+    var that                = this;
+
+    this.tableArray         = opts.tableArray;
+    let request             = window.indexedDB.open(opts.dbName, opts.dbVersion);
+    request.onupgradeneeded = this.onUpgradeNeeded.bind(this);
+
+    // Use transaction oncomplete to make sure the objectStore creation is 
+    // finished before adding data into it.
+    request.onsuccess       = function(event){
+      that.db = event.target.result;
+      opts.onCompleteCB(event);
+    }
+    
+    //DB creation wasn't allowed or failed, we need fallback
+    request.onerror         = this.onError.bind(this);
+  };
+
+  /**
+   * Function called to handle changes in the DB structure
+   * @param  {[type]} event [description]
+   * @return {[type]}       [description]
+   */
+  DBManager.prototype.onUpgradeNeeded = function(event) {
+    this.db = event.target.result;
+
+    //Run through the tables to add them to the Database
+    for(let key in this.tableArray){
+      let aTable = this.tableArray[key];
+
+      //Create an ObjectStore to handle models URLs
+      let objModelStore = this.db.createObjectStore(aTable.name, { keyPath: aTable.keyPath });
+      for(let i = 0, len = aTable.index.length; i < len; ++i){
+        objModelStore.createIndex(aTable.index[i].name, aTable.index[i].name, { unique: aTable.index[i].unique });
+      }
+    }
+  };
+
+  DBManager.prototype.onError = function(event) {
+    console.log("[DBManager] Error", event.target.error);
+  };
+})();
+
+module.exports = DBManager;
+},{}],3:[function(require,module,exports){
 // Use of this source code is governed by an Apache license that can be
 // found in the LICENSE file.
 
 (function(){
 	"use strict";
   var Util = require("./util.js");
+  var ModelManager = require("./modelManager.js");
   //Handling the AFrame components in a different file for clarity
   require("./aframeComponents.js");
+
+  new ModelManager();
 
   window.onload = function(){
     /**
@@ -112,7 +167,103 @@
     }
   };
 })();
-},{"./aframeComponents.js":1,"./util.js":3}],3:[function(require,module,exports){
+},{"./aframeComponents.js":1,"./modelManager.js":4,"./util.js":5}],4:[function(require,module,exports){
+var ModelManager;
+
+(function(){
+  "use strict";
+  var DBManager = require("./dbManager.js");
+
+  const TYPES = {
+    "FEATURED" : 0,
+    "RECENT"   : 1,
+    "STARRED"  : 2
+  }
+
+  /**
+   * Models to add to the featured one (should be extracted from online in the future)
+   * @type {Array}
+   */
+  const featuredModels = [
+    { ssn: "3b717cf7", url: "https://ucarecdn.com/3e089e07-be62-48e1-9f12-9a284c249e77/", type: TYPES.FEATURED },
+    { ssn: "1400ac94", url: "https://ucarecdn.com/bacf6186-96b1-404c-9751-e955ece04919/", type: TYPES.FEATURED },
+    { ssn: "672110ca", url: "https://ucarecdn.com/962b242b-87a9-422c-b730-febdc470f203/", type: TYPES.FEATURED },
+  ];
+
+  /**
+   * Class to create the Models list DataBase
+   * And to handle access to this list
+   */
+  ModelManager = function(){
+    this.dbStructure = {
+      dbName : "pwaFramePainterDB",
+      dbVersion : 4,
+      tableArray : [{
+        name : "models",
+        keyPath : "ssn",
+        index : [
+          { name : "url", unique : false},
+          { name : "type", unique : false},
+        ],
+      }],
+      onCompleteCB : this.onDBReady.bind(this)
+    };
+
+    this.dbManager = new DBManager(this.dbStructure);
+  };
+
+  /**
+   * Method to fill the database with the featured Models if this hasn't been done
+   * @param  {[type]} event [description]
+   * @return {[type]}       [description]
+   */
+  ModelManager.prototype.onDBReady = function(event) {
+    console.log("[ModelManager] DB structure created, adding fixed values");
+    // Store values in the newly created objectStore.
+    var objModelStore = this.dbManager.db.transaction(this.dbStructure.tableArray[0].name, "readwrite").objectStore(this.dbStructure.tableArray[0].name);
+    for (var i in featuredModels) {
+      objModelStore.add(featuredModels[i]);
+    }
+
+    this.populateModelContainer();
+  };
+
+  /**
+   * Method to fill the UI with the Model's list
+   * @return {[type]} [description]
+   */
+  ModelManager.prototype.populateModelContainer = function() {
+    let tableName = this.dbStructure.tableArray[0].name;
+    var objStore = this.dbManager.db.transaction(tableName).objectStore(tableName);
+
+    //Reads all the entries in the model table and create icons to access it
+    objStore.openCursor().onsuccess = function(event) {
+      var cursor = event.target.result;
+      if (cursor) {
+        switch(cursor.value.type){
+          case TYPES.FEATURED :
+            let url = (location.host.indexOf("localhost") !== -1 ? "http://" : "https://") + location.host;
+            url     = url + location.pathname + "?url=" + cursor.value.url;
+
+            let imgLinkObj       = document.createElement("img");
+            imgLinkObj.className = "imgModelLink";
+            imgLinkObj.src       = "public/assets/icons/icon-128x128.png";
+            imgLinkObj.addEventListener("click", function(){
+              location.href = url;
+            });
+
+            document.getElementById("featuredRow").append(imgLinkObj);
+            break;
+        }
+        cursor.continue();
+      }
+    };
+  };
+
+})();
+
+module.exports = ModelManager;
+},{"./dbManager.js":2}],5:[function(require,module,exports){
 var Util = {};
 (function(){
   "use strict";
@@ -150,4 +301,4 @@ var Util = {};
 })()
 
 module.exports = Util;
-},{}]},{},[2]);
+},{}]},{},[3]);
