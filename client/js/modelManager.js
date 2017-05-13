@@ -82,7 +82,7 @@ var ModelManager;
               location.href = url;
             });
 
-            document.getElementById("featuredRow").append(imgLinkObj);
+            document.getElementById("featuredRow").appendChild(imgLinkObj);
             break;
         }
         cursor.continue();
