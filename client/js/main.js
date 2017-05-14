@@ -1,6 +1,5 @@
 // Use of this source code is governed by an Apache license that can be
 // found in the LICENSE file.
-
 (function(){
 	"use strict";
   var Util = require("./util.js");
@@ -8,7 +7,7 @@
   //Handling the AFrame components in a different file for clarity
   require("./aframeComponents.js");
 
-  new ModelManager();
+  window.modelManager = new ModelManager();
 
   window.onload = function(){
     /**
@@ -29,7 +28,7 @@
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker
         .register('./service-worker.js')
-        .then(function() { 
+        .then(function(data) { 
           console.log('Service Worker Registered');
         })
         .catch(function(err){ console.log("Error in registering Service Worker", err)});

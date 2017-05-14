@@ -231,8 +231,9 @@ body {
 }
 
 .imgModelLink {
-  width     : 17%;
-  margin    : 1%;
-  max-width : 128px;
-  cursor    : pointer;
+  width         : 17%;
+  margin        : 1%;
+  max-width     : 128px;
+  cursor        : pointer;
+  border-radius : 10px;
 }

@@ -131,7 +131,6 @@ module.exports = DBManager;
 },{}],3:[function(require,module,exports){
 // Use of this source code is governed by an Apache license that can be
 // found in the LICENSE file.
-
 (function(){
 	"use strict";
   var Util = require("./util.js");
@@ -139,7 +138,7 @@ module.exports = DBManager;
   //Handling the AFrame components in a different file for clarity
   require("./aframeComponents.js");
 
-  new ModelManager();
+  window.modelManager = new ModelManager();
 
   window.onload = function(){
     /**
@@ -160,7 +159,7 @@ module.exports = DBManager;
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker
         .register('./service-worker.js')
-        .then(function() { 
+        .then(function(data) { 
           console.log('Service Worker Registered');
         })
         .catch(function(err){ console.log("Error in registering Service Worker", err)});
@@ -247,7 +246,7 @@ var ModelManager;
 
             let imgLinkObj       = document.createElement("img");
             imgLinkObj.className = "imgModelLink";
-            imgLinkObj.src       = "public/assets/icons/icon-128x128.png";
+            imgLinkObj.src       = "public/assets/images/" + cursor.value.ssn + ".png";
             imgLinkObj.addEventListener("click", function(){
               location.href = url;
             });
@@ -258,6 +257,43 @@ var ModelManager;
         cursor.continue();
       }
     };
+  };
+
+  function sendMessage(message){
+    // This wraps the message posting/response in a promise, which will resolve if the response doesn't
+    // contain an error, and reject with the error if it does. If you'd prefer, it's possible to call
+    // controller.postMessage() and set up the onmessage handler independently of a promise, but this is
+    // a convenient wrapper.
+    return new Promise(function(resolve, reject) {
+      var messageChannel = new MessageChannel();
+      messageChannel.port1.onmessage = function(event) {
+        if (event.data.error) {
+          reject(event.data.error);
+        } else {
+          resolve(event.data);
+        }
+      };
+
+      // This sends the message data as well as transferring messageChannel.port2 to the service worker.
+      // The service worker can then use the transferred port to reply via postMessage(), which
+      // will in turn trigger the onmessage handler on messageChannel.port1.
+      // See https://html.spec.whatwg.org/multipage/workers.html#dom-worker-postmessage
+      navigator.serviceWorker.controller.postMessage(message,
+        [messageChannel.port2]);
+    });
+  }
+
+  ModelManager.prototype.saveThumb = function() {
+    let mainCanvas = document.getElementsByTagName("canvas")[0];
+    sendMessage({command : "add", url : "./testURL", file : mainCanvas.toDataURL()}).then((response) => {
+      console.log("[ModelManager] saveThumb response", response);
+    });
+  };
+
+  ModelManager.prototype.getThumb = function(getUrl) {
+    sendMessage({command : "get", url : getUrl}).then((response) => {
+      console.log("[ModelManager] getThumb response", response);
+    });
   };
 
 })();
