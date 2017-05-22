@@ -15,12 +15,7 @@
      * If so, load the matching model
      */
     Util.extractFromUrl("url").then((url) => {
-      if(url){
-        let newModel = document.createElement("a-entity");
-        newModel.setAttribute("a-painter-loader", "src:" + url);
-        newModel.setAttribute("position", "0 0 -2");
-        document.getElementsByTagName("a-scene")[0].appendChild(newModel);
-      }
+      modelManager.loadModel(url);
     }).catch((err) => {
       console.log("[Error] Error in loading APainting", err);
     });

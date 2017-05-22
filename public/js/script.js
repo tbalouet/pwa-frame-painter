@@ -146,12 +146,7 @@ module.exports = DBManager;
      * If so, load the matching model
      */
     Util.extractFromUrl("url").then((url) => {
-      if(url){
-        let newModel = document.createElement("a-entity");
-        newModel.setAttribute("a-painter-loader", "src:" + url);
-        newModel.setAttribute("position", "0 0 -2");
-        document.getElementsByTagName("a-scene")[0].appendChild(newModel);
-      }
+      modelManager.loadModel(url);
     }).catch((err) => {
       console.log("[Error] Error in loading APainting", err);
     });
@@ -172,6 +167,7 @@ var ModelManager;
 (function(){
   "use strict";
   var DBManager = require("./dbManager.js");
+  var Util = require("./util.js");
 
   const TYPES = {
     "FEATURED" : 0,
@@ -184,9 +180,9 @@ var ModelManager;
    * @type {Array}
    */
   const featuredModels = [
-    { ssn: "3b717cf7", url: "https://ucarecdn.com/3e089e07-be62-48e1-9f12-9a284c249e77/", type: TYPES.FEATURED },
-    { ssn: "1400ac94", url: "https://ucarecdn.com/bacf6186-96b1-404c-9751-e955ece04919/", type: TYPES.FEATURED },
-    { ssn: "672110ca", url: "https://ucarecdn.com/962b242b-87a9-422c-b730-febdc470f203/", type: TYPES.FEATURED },
+    { ssn: "3b717cf7", url: "https://ucarecdn.com/3e089e07-be62-48e1-9f12-9a284c249e77/", thumb : "public/assets/images/3b717cf7.png", type: TYPES.FEATURED },
+    { ssn: "1400ac94", url: "https://ucarecdn.com/bacf6186-96b1-404c-9751-e955ece04919/", thumb : "public/assets/images/1400ac94.png", type: TYPES.FEATURED },
+    { ssn: "672110ca", url: "https://ucarecdn.com/962b242b-87a9-422c-b730-febdc470f203/", thumb : "public/assets/images/672110ca.png", type: TYPES.FEATURED },
   ];
 
   /**
@@ -194,14 +190,16 @@ var ModelManager;
    * And to handle access to this list
    */
   ModelManager = function(){
-    this.dbStructure = {
+    this.currentModel = undefined;
+    this.dbStructure  = {
       dbName : "pwaFramePainterDB",
       dbVersion : 4,
       tableArray : [{
         name : "models",
         keyPath : "ssn",
         index : [
-          { name : "url", unique : false},
+          { name : "url", unique : true},
+          { name : "thumb", unique : false},
           { name : "type", unique : false},
         ],
       }],
@@ -218,13 +216,27 @@ var ModelManager;
    */
   ModelManager.prototype.onDBReady = function(event) {
     console.log("[ModelManager] DB structure created, adding fixed values");
-    // Store values in the newly created objectStore.
-    var objModelStore = this.dbManager.db.transaction(this.dbStructure.tableArray[0].name, "readwrite").objectStore(this.dbStructure.tableArray[0].name);
-    for (var i in featuredModels) {
-      objModelStore.add(featuredModels[i]);
-    }
+    this.registerData(featuredModels, false);
 
     this.populateModelContainer();
+  };
+
+  /**
+   * Add an array of data in the object store
+   * @param {[type]} dataArray [description]
+   */
+  ModelManager.prototype.registerData = function(dataArray, addToContainer){
+    var that = this;
+
+    var objModelStore = this.dbManager.db.transaction(this.dbStructure.tableArray[0].name, "readwrite").objectStore(this.dbStructure.tableArray[0].name);
+    for (var i in dataArray) {
+      var idbObject = objModelStore.add(dataArray[i]);
+      if(addToContainer){
+        idbObject.onsuccess = function(event) {
+          that.addToContainer(dataArray[i]);
+        };
+      }
+    }
   };
 
   /**
@@ -232,6 +244,7 @@ var ModelManager;
    * @return {[type]} [description]
    */
   ModelManager.prototype.populateModelContainer = function() {
+    var that = this;
     let tableName = this.dbStructure.tableArray[0].name;
     var objStore = this.dbManager.db.transaction(tableName).objectStore(tableName);
 
@@ -239,67 +252,113 @@ var ModelManager;
     objStore.openCursor().onsuccess = function(event) {
       var cursor = event.target.result;
       if (cursor) {
-        switch(cursor.value.type){
-          case TYPES.FEATURED :
-            let url = (location.host.indexOf("localhost") !== -1 ? "http://" : "https://") + location.host;
-            url     = url + location.pathname + "?url=" + cursor.value.url;
-
-            let imgLinkObj       = document.createElement("img");
-            imgLinkObj.className = "imgModelLink";
-            imgLinkObj.src       = "public/assets/images/" + cursor.value.ssn + ".png";
-            imgLinkObj.addEventListener("click", function(){
-              location.href = url;
-            });
-
-            document.getElementById("featuredRow").appendChild(imgLinkObj);
-            break;
-        }
+        that.addToContainer(cursor.value);
         cursor.continue();
       }
     };
   };
 
-  function sendMessage(message){
-    // This wraps the message posting/response in a promise, which will resolve if the response doesn't
-    // contain an error, and reject with the error if it does. If you'd prefer, it's possible to call
-    // controller.postMessage() and set up the onmessage handler independently of a promise, but this is
-    // a convenient wrapper.
-    return new Promise(function(resolve, reject) {
-      var messageChannel = new MessageChannel();
-      messageChannel.port1.onmessage = function(event) {
-        if (event.data.error) {
-          reject(event.data.error);
-        } else {
-          resolve(event.data);
+  /**
+   * Add data to the appropriate GUI container
+   * @param {object} data with type, url and id 
+   */
+  ModelManager.prototype.addToContainer = function(data){
+    let url = (location.host.indexOf("localhost") !== -1 ? "http://" : "https://") + location.host;
+    url     = url + location.pathname + "?url=" + data.url;
+
+    let imgLinkObj       = document.createElement("img");
+    imgLinkObj.className = "imgModelLink";
+    imgLinkObj.src       = data.thumb;
+    imgLinkObj.addEventListener("click", function(){
+      location.href = url;
+    });
+
+    switch(data.type){
+      case TYPES.FEATURED :
+        document.getElementById("featuredRow").appendChild(imgLinkObj);
+        break;
+      case TYPES.RECENT :
+        let firstChild = document.getElementById("recentRow").children > 1 ? document.getElementById("recentRow").children[1] : null;
+        if(firstChild){
+          document.getElementById("recentRow").insertBefore( imgLinkObj, firstChild );
         }
-      };
-
-      // This sends the message data as well as transferring messageChannel.port2 to the service worker.
-      // The service worker can then use the transferred port to reply via postMessage(), which
-      // will in turn trigger the onmessage handler on messageChannel.port1.
-      // See https://html.spec.whatwg.org/multipage/workers.html#dom-worker-postmessage
-      navigator.serviceWorker.controller.postMessage(message,
-        [messageChannel.port2]);
-    });
-  }
-
-  ModelManager.prototype.saveThumb = function() {
-    let mainCanvas = document.getElementsByTagName("canvas")[0];
-    sendMessage({command : "add", url : "./testURL", file : mainCanvas.toDataURL()}).then((response) => {
-      console.log("[ModelManager] saveThumb response", response);
-    });
+        else{
+          document.getElementById("recentRow").appendChild(imgLinkObj);
+        }
+        break;
+    }
   };
 
-  ModelManager.prototype.getThumb = function(getUrl) {
-    sendMessage({command : "get", url : getUrl}).then((response) => {
-      console.log("[ModelManager] getThumb response", response);
-    });
+  /**
+   * Load a new model in the scene, based on its URL
+   * @param  {string} url of the A-Frame painter model
+   * @return {[type]}     [description]
+   */
+  ModelManager.prototype.loadModel = function(url){
+    var that = this;
+    if(url){
+      let newModel = document.createElement("a-entity");
+      newModel.addEventListener("model-loaded", function(data){
+        that.saveThumb();
+      });
+
+      newModel.setAttribute("a-painter-loader", "src:" + url);
+      newModel.setAttribute("position", "0 0 -2");
+      document.getElementsByTagName("a-scene")[0].appendChild(newModel);
+      this.currentModel = {
+        "url" : url
+      }
+    }
   };
 
+  /**
+   * Save the thumbnail of the actual model and add it to the base
+   * @param  {string} type of model saved
+   * @return {[type]}      [description]
+   */
+  ModelManager.prototype.saveThumb = function(type) {
+    var that   = this;
+    type       = type || TYPES.RECENT;
+    let canvas = document.querySelector('a-scene').components.screenshot.getCanvas('perspective');
+    let img    = canvas.toDataURL();
+    try {
+        img = img.split(',')[1];
+    } catch(e) {
+        img = img.split(',')[1];
+    }
+
+    let httpPost = new XMLHttpRequest(),
+      path       = 'https://api.imgur.com/3/image',
+      data       = JSON.stringify({image: img});
+    httpPost.onreadystatechange = function(err) {
+      if (httpPost.readyState == 4 && httpPost.status == 200){
+        try{
+          let data    = JSON.parse(httpPost.responseText).data;
+          let imgLink = data.link.replace(".png", "m.png");//Get the image medium thumbnail link
+          console.log(imgLink);
+          let model = [{
+            "ssn"   : Util.guid() + Util.guid(),
+            "url"   : that.currentModel.url, 
+            "thumb" : imgLink, 
+            "type"  : type
+          }];
+          that.registerData(model, true);
+        }
+        catch(err){
+          console.log(err);
+        }
+      }
+    };
+    // Set the content type of the request to json since that's what's being sent
+    httpPost.open("POST", path, true);
+    httpPost.setRequestHeader('Content-Type', 'application/json');
+    httpPost.setRequestHeader('Authorization', 'Client-ID 36484f1fb6bfeeb');
+    httpPost.send(data);
+  };
 })();
 
 module.exports = ModelManager;
-},{"./dbManager.js":2}],5:[function(require,module,exports){
+},{"./dbManager.js":2,"./util.js":5}],5:[function(require,module,exports){
 var Util = {};
 (function(){
   "use strict";
@@ -334,6 +393,19 @@ var Util = {};
       }
     })
   };
+
+  /**
+   * Generate an Unique ID
+   * @return {string} Unique ID of length 4
+   */
+  Util.guid = function(){
+    function s4() {
+      return Math.floor((1 + Math.random()) * 0x10000)
+        .toString(16)
+        .substring(1);
+    }
+    return s4();
+  }
 })()
 
 module.exports = Util;
