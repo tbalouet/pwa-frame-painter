@@ -234,6 +234,7 @@ body {
   width         : 17%;
   margin        : 1%;
   max-width     : 128px;
+  max-height    : 128px;
   cursor        : pointer;
   border-radius : 10px;
 }

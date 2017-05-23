@@ -122,6 +122,51 @@ var DBManager;
     }
   };
 
+  /**
+   * Function to browse the object store and deploy a function on each key value
+   * @param  {string} tableName the name of the table to browse
+   * @param  {func} cbFunc    the function to apply to each retrieved line
+   */
+  DBManager.prototype.browseObjStore = function(tableName, cbFunc){
+    return new Promise((resolve, reject) => {
+      let objStore = this.db.transaction(tableName).objectStore(tableName);
+
+      //Reads all the entries in the model table and create icons to access it
+      objStore.openCursor().onsuccess = function(event) {
+        let cursor = event.target.result;
+        if (cursor) {
+          cbFunc(cursor.value);
+          cursor.continue();
+        }
+        else{
+          resolve(true);
+        }
+      };
+    })
+  };
+
+  /**
+   * Promise to check if a KeyPair already exists in a table
+   * @param  {string} tableName name of the table
+   * @param  {object} keyPair   object {key: ..., value: ...} defining what we're looking for
+   * @return {[type]}           [description]
+   */
+  DBManager.prototype.getEntry = function(tableName, ssnKey){
+    return new Promise((resolve, reject) => {
+      let objStore = this.db.transaction(tableName).objectStore(tableName);
+
+      // get record by key from the object store
+      let objStoreReq = objStore.get(ssnKey);
+
+      objStoreReq.onsuccess = function(event) {
+        resolve(event.target.result);
+      };
+      objStoreReq.onerror = function(event) {
+        reject(event);
+      };
+    })
+  }
+
   DBManager.prototype.onError = function(event) {
     console.log("[DBManager] Error", event.target.error);
   };
@@ -180,9 +225,9 @@ var ModelManager;
    * @type {Array}
    */
   const featuredModels = [
-    { ssn: "3b717cf7", url: "https://ucarecdn.com/3e089e07-be62-48e1-9f12-9a284c249e77/", thumb : "public/assets/images/3b717cf7.png", type: TYPES.FEATURED },
-    { ssn: "1400ac94", url: "https://ucarecdn.com/bacf6186-96b1-404c-9751-e955ece04919/", thumb : "public/assets/images/1400ac94.png", type: TYPES.FEATURED },
-    { ssn: "672110ca", url: "https://ucarecdn.com/962b242b-87a9-422c-b730-febdc470f203/", thumb : "public/assets/images/672110ca.png", type: TYPES.FEATURED },
+    { ssn: "https://ucarecdn.com/3e089e07-be62-48e1-9f12-9a284c249e77/_0", url: "https://ucarecdn.com/3e089e07-be62-48e1-9f12-9a284c249e77/", thumb : "public/assets/images/3b717cf7.png", type: TYPES.FEATURED },
+    { ssn: "https://ucarecdn.com/bacf6186-96b1-404c-9751-e955ece04919/_0", url: "https://ucarecdn.com/bacf6186-96b1-404c-9751-e955ece04919/", thumb : "public/assets/images/1400ac94.png", type: TYPES.FEATURED },
+    { ssn: "https://ucarecdn.com/962b242b-87a9-422c-b730-febdc470f203/_0", url: "https://ucarecdn.com/962b242b-87a9-422c-b730-febdc470f203/", thumb : "public/assets/images/672110ca.png", type: TYPES.FEATURED },
   ];
 
   /**
@@ -193,12 +238,12 @@ var ModelManager;
     this.currentModel = undefined;
     this.dbStructure  = {
       dbName : "pwaFramePainterDB",
-      dbVersion : 4,
+      dbVersion : 3,
       tableArray : [{
         name : "models",
         keyPath : "ssn",
         index : [
-          { name : "url", unique : true},
+          { name : "url", unique : false},
           { name : "thumb", unique : false},
           { name : "type", unique : false},
         ],
@@ -216,46 +261,41 @@ var ModelManager;
    */
   ModelManager.prototype.onDBReady = function(event) {
     console.log("[ModelManager] DB structure created, adding fixed values");
-    this.registerData(featuredModels, false);
-
-    this.populateModelContainer();
+    this.registerData(featuredModels, false).catch((err) => {
+      console.log("[ModelManager] Error in populating DB and Container", err);
+    }).then(() => {
+      return this.dbManager.browseObjStore(this.dbStructure.tableArray[0].name, this.addToContainer.bind(this));
+    })
   };
 
   /**
    * Add an array of data in the object store
    * @param {[type]} dataArray [description]
    */
-  ModelManager.prototype.registerData = function(dataArray, addToContainer){
-    var that = this;
+  ModelManager.prototype.registerData = function(dataArray){
+    return new Promise((resolve, reject) => {
+      var that = this;
 
-    var objModelStore = this.dbManager.db.transaction(this.dbStructure.tableArray[0].name, "readwrite").objectStore(this.dbStructure.tableArray[0].name);
-    for (var i in dataArray) {
-      var idbObject = objModelStore.add(dataArray[i]);
-      if(addToContainer){
-        idbObject.onsuccess = function(event) {
-          that.addToContainer(dataArray[i]);
-        };
+      let tableName = this.dbStructure.tableArray[0].name;
+      let promArray = [];
+      for (let i in dataArray) {
+        let keyValue = dataArray[i].url + "_" + dataArray[i].type;
+
+        promArray.push(this.dbManager.getEntry(this.dbStructure.tableArray[0].name, keyValue).then((val) => {
+          if(val === undefined){
+            let objModelStore = that.dbManager.db.transaction(tableName, "readwrite").objectStore(tableName);
+            let idbObject = objModelStore.add(dataArray[i]);
+            idbObject.onerror = ((err) => {
+              console.log("[ModelManager] Error in adding field", dataArray[i], err.target.error);
+            });
+          }
+          return true;
+        }));
       }
-    }
-  };
-
-  /**
-   * Method to fill the UI with the Model's list
-   * @return {[type]} [description]
-   */
-  ModelManager.prototype.populateModelContainer = function() {
-    var that = this;
-    let tableName = this.dbStructure.tableArray[0].name;
-    var objStore = this.dbManager.db.transaction(tableName).objectStore(tableName);
-
-    //Reads all the entries in the model table and create icons to access it
-    objStore.openCursor().onsuccess = function(event) {
-      var cursor = event.target.result;
-      if (cursor) {
-        that.addToContainer(cursor.value);
-        cursor.continue();
-      }
-    };
+      Promise.all(promArray).then(() => {
+        resolve(true);
+      })
+    })
   };
 
   /**
@@ -287,6 +327,7 @@ var ModelManager;
         }
         break;
     }
+    return true;
   };
 
   /**
@@ -319,41 +360,59 @@ var ModelManager;
   ModelManager.prototype.saveThumb = function(type) {
     var that   = this;
     type       = type || TYPES.RECENT;
-    let canvas = document.querySelector('a-scene').components.screenshot.getCanvas('perspective');
-    let img    = canvas.toDataURL();
-    try {
-        img = img.split(',')[1];
-    } catch(e) {
-        img = img.split(',')[1];
-    }
 
-    let httpPost = new XMLHttpRequest(),
-      path       = 'https://api.imgur.com/3/image',
-      data       = JSON.stringify({image: img});
-    httpPost.onreadystatechange = function(err) {
-      if (httpPost.readyState == 4 && httpPost.status == 200){
-        try{
-          let data    = JSON.parse(httpPost.responseText).data;
-          let imgLink = data.link.replace(".png", "m.png");//Get the image medium thumbnail link
-          console.log(imgLink);
+    let keyValue = this.currentModel.url + "_" + type;
+
+    this.dbManager.getEntry(this.dbStructure.tableArray[0].name, keyValue).then((val) => {
+      if(val !== undefined){
+        console.log("[ModelManager] model already exists");
+        return true;
+      }
+
+      let canvas = document.querySelector('a-scene').components.screenshot.getCanvas('perspective');
+      let img    = canvas.toDataURL().split(',')[1];
+
+      var formData = new FormData()
+      formData.append('type', 'json')
+      formData.append('image', img)
+
+      return fetch('https://api.imgur.com/3/image', {
+        method: 'POST',
+        headers: {
+          Accept        : 'application/json',
+          Authorization : 'Client-ID 36484f1fb6bfeeb'// imgur specific
+        },
+        body: formData
+      }).then((response) => {
+        if(!response.ok){
+          throw response;
+        }
+
+        return response.json().then((obj) => {
+          let imgLink = obj.data.link.replace(".png", "m.png");//Get the image medium thumbnail link
+
           let model = [{
-            "ssn"   : Util.guid() + Util.guid(),
+            "ssn"   : that.currentModel.url + "_" + type,
             "url"   : that.currentModel.url, 
             "thumb" : imgLink, 
             "type"  : type
           }];
-          that.registerData(model, true);
-        }
-        catch(err){
-          console.log(err);
-        }
-      }
-    };
-    // Set the content type of the request to json since that's what's being sent
-    httpPost.open("POST", path, true);
-    httpPost.setRequestHeader('Content-Type', 'application/json');
-    httpPost.setRequestHeader('Authorization', 'Client-ID 36484f1fb6bfeeb');
-    httpPost.send(data);
+          return that.registerData(model).then(() => {
+            console.log("[ModelManager] Model thumb saved");
+            return true;
+          }).then(() => {
+            return that.addToContainer(model[0]);
+          }).catch((err) => {
+            console.log("[ModelManager] Error in registering data", err);
+            return false;
+          })
+        })
+      }).catch((errResponse) => {
+        console.log("[ModelManager] Error in posting request", errResponse.statusText, "Error " + errResponse.status);
+      });
+    }).catch((err) => {
+      console.log("[ModelManager] Error in saving thumb", err);
+    });
   };
 })();
 
