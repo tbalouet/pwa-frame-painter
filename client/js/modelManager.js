@@ -33,7 +33,7 @@ var ModelManager;
     this.currentModel = undefined;
     this.dbStructure  = {
       dbName : "pwaFramePainterDB",
-      dbVersion : 3,
+      dbVersion : 5,
       tableArray : [{
         name : "models",
         keyPath : "ssn",
