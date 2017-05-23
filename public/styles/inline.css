@@ -128,25 +128,32 @@ body {
   opacity            : 0.54;
 }
 
-.header #butQRCode {
+.header .butQRCode {
   background: url('../assets/icons/icons_spritesheet.png') no-repeat -32px 0px;
   width: 32px;
   height: 32px;
 }
 
-.header #butGallery {
+.header .butGallery {
   background: url('../assets/icons/icons_spritesheet.png') no-repeat -32px -32px;
   width: 32px;
   height: 32px;
 }
 
-.header #butFav {
+.butGalleryLoad {
+  background      : url(../assets/images/loader.gif);
+  width           : 32px;
+  height          : 32px;
+  background-size : 32px 32px;
+}
+
+.header .butFav {
   background: url('../assets/icons/icons_spritesheet.png') no-repeat 0px 0px;
   width: 32px;
   height: 32px;
 }
 
-.header #butLoad {
+.header .butLoad {
   background: url('../assets/icons/icons_spritesheet.png') no-repeat 0px -32px;
   width: 32px;
   height: 32px;

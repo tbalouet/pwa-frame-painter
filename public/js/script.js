@@ -344,6 +344,7 @@ var ModelManager;
       let newModel = document.createElement("a-entity");
       newModel.addEventListener("model-loaded", function(data){
         that.saveThumb();
+        document.getElementById("loaderDiv").classList.remove('make-container--visible');
       });
 
       newModel.setAttribute("a-painter-loader", "src:" + url);
@@ -369,11 +370,11 @@ var ModelManager;
     this.dbManager.getEntry(this.dbStructure.tableArray[0].name, keyValue).then((val) => {
       if(val !== undefined){
         console.log("[ModelManager] model already exists");
-        document.getElementById("loaderDiv").classList.remove('make-container--visible');
-
         that.currentModel = val;
         return true;
       }
+      document.getElementById("butGallery").classList.remove('butGallery');
+      document.getElementById("butGallery").classList.add('butGalleryLoad');
 
       if(that.currentModel && that.currentModel.thumb){
         let model = [{
@@ -429,9 +430,10 @@ var ModelManager;
 
     return this.registerData(model).then(() => {
       console.log("[ModelManager] Model thumb saved");
-      document.getElementById("loaderDiv").classList.remove('make-container--visible');
       return true;
     }).then(() => {
+      document.getElementById("butGallery").classList.remove('butGalleryLoad');
+      document.getElementById("butGallery").classList.add('butGallery');
       return that.addToContainer(model[0]);
     }).catch((err) => {
       console.log("[ModelManager] Error in registering data", err);
