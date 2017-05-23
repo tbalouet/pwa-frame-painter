@@ -71,12 +71,17 @@ var ModelManager;
     return new Promise((resolve, reject) => {
       var that = this;
 
+      if(!this.dbManager.db){
+        reject("DB wasn't initialized properly, aborting data registering");
+      }
+
       let tableName = this.dbStructure.tableArray[0].name;
       let promArray = [];
       for (let i in dataArray) {
         let keyValue = dataArray[i].url + "_" + dataArray[i].type;
 
         promArray.push(this.dbManager.getEntry(this.dbStructure.tableArray[0].name, keyValue).then((val) => {
+          //Check if entries already belong to the DB
           if(val === undefined){
             let objModelStore = that.dbManager.db.transaction(tableName, "readwrite").objectStore(tableName);
             let idbObject = objModelStore.add(dataArray[i]);
@@ -87,6 +92,7 @@ var ModelManager;
           return true;
         }));
       }
+      //Wait for all data to be enter in the DB before resolving promise
       Promise.all(promArray).then(() => {
         resolve(true);
       })
@@ -105,11 +111,13 @@ var ModelManager;
     imgLinkObj.className = "imgModelLink";
     imgLinkObj.src       = data.thumb;
     imgLinkObj.addEventListener("click", function(){
+      //On click on the thumbnail, we reload with model address as URL variable
       location.href = url;
     });
 
     let divID = (data.type === TYPES.FEATURED ? "featuredRow" : (data.type === TYPES.RECENT ? "recentRow" : "starredRow"));
 
+    //Add thumbnail to the appropriate div in the gallery dialog
     let firstChild = (document.getElementById(divID).children.length > 1 ? document.getElementById(divID).children[1] : null);
     if(firstChild){
       document.getElementById(divID).insertBefore( imgLinkObj, firstChild );
@@ -122,7 +130,7 @@ var ModelManager;
   };
 
   /**
-   * Load a new model in the scene, based on its URL
+   * Load a new model in the A-Frame scene, based on its URL
    * @param  {string} url of the A-Frame painter model
    * @return {[type]}     [description]
    */
@@ -155,15 +163,23 @@ var ModelManager;
 
     let keyValue = this.currentModel.url + "_" + type;
 
+    if(!this.dbManager.db){
+      console.log("DB wasn't initialized properly, aborting thumbnail saving");
+      return;
+    }
+
     this.dbManager.getEntry(this.dbStructure.tableArray[0].name, keyValue).then((val) => {
       if(val !== undefined){
         console.log("[ModelManager] model already exists");
         that.currentModel = val;
         return true;
       }
+
+      //Change the gallery button icon to show we are loading image
       document.getElementById("butGallery").classList.remove('butGallery');
       document.getElementById("butGallery").classList.add('butGalleryLoad');
 
+      //If thumb has already been generated (adding fav), we don't upload it again
       if(that.currentModel && that.currentModel.thumb){
         let model = [{
           "ssn"   : that.currentModel.url + "_" + type,
@@ -174,13 +190,16 @@ var ModelManager;
         return that.onModelData(model);
       }
 
+      //We extract a screenshot image from the A-Frame canvas
       let canvas = document.querySelector('a-scene').components.screenshot.getCanvas('perspective');
+      //We remove the string "data:image/png;base64" from the toDataURL return, otherwise it bugs with Imgur
       let img    = canvas.toDataURL().split(',')[1];
 
       var formData = new FormData()
       formData.append('type', 'json')
       formData.append('image', img)
 
+      //Send the image generated from canvas to the Imgur API to get an Image file
       return fetch('https://api.imgur.com/3/image', {
         method: 'POST',
         headers: {
@@ -213,6 +232,12 @@ var ModelManager;
     });
   };
 
+  /**
+   * Register a model data (if not already registered)
+   * and add it to the gallery dialog container
+   * @param  {[type]} model [description]
+   * @return {[type]}       [description]
+   */
   ModelManager.prototype.onModelData = function(model){
     var that = this;
 

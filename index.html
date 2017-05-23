@@ -26,20 +26,27 @@
   <script src="public/js/script.js"></script>
 </head>
 <body>
+  <!-- MENUBAR -->
   <header class="header">
     <h1 class="header__title">Progressive Web A-Painter</h1>
     <button id="butQRCode" class="butQRCode headerButton" title="Get page QR code"></button>
-    <button id="butGallery" class="butGallery headerButton" title="Open gallery"></button>
+    <button id="butGallery" class="butGallery headerButton tooltips ttFirst" title="Open gallery">
+      <span id="butGalleryTip">
+          <strong>Load Model!</strong>
+      </span>
+    </button>
     <button id="butFav" class="butFav headerButton" title="Add to favorites"></button>
     <button id="butLoad" class="butLoad headerButton" title="Load model"></button>
   </header>
+
+  <!-- DIALOG CONTAINERS -->
 
   <div id="loaderDiv" class="dialog-container make-container--visible">
     <img class="loader" src="public/assets/images/loader.gif" />
   </div>
 
   <div id="qrCodeDiv" class="dialog-container">
-    <span class="small close rounded heavy"></span>
+    <span id="closeQRCode" class="small close rounded heavy"></span>
     <div id="qrcode"></div>
   </div>
 
@@ -69,6 +76,8 @@
     </div>
   </div>
 
+  <!-- A-FRAME ELEMENTS -->
+
   <a-scene fog="color: #bc483e; near: 0; far: 65;">
     <a-entity position="0 0 -0.5">
       <!-- Environment -->
@@ -81,6 +90,8 @@
       <a-entity light="type: ambient; color: #f4f4f4; intensity: 0.4;" position="-8 10 -18"></a-entity>
     </a-entity>
   </a-scene>
+
+  <!-- SCRIPTS -->
 
   <script src="public/js/qrcode.js"></script>
   <script src="public/js/ui-script.js"></script>

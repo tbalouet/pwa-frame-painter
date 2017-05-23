@@ -23,6 +23,10 @@ body {
   height: 100px;
 }
 
+.hide{
+  display: none;
+}
+
 /*=====QR CODE=====*/
 
 .close {
@@ -111,9 +115,6 @@ body {
   width              : 24px;
   height             : 24px;
   margin-right       : 16px;
-  text-indent        : -30000px;
-  overflow           : hidden;
-  opacity            : 0.54;
   -webkit-transition : opacity 0.333s cubic-bezier(0, 0, 0.21, 1);
   transition         : opacity 0.333s cubic-bezier(0, 0, 0.21, 1);
   border             : none;
@@ -129,35 +130,93 @@ body {
 }
 
 .header .butQRCode {
-  background: url('../assets/icons/icons_spritesheet.png') no-repeat -32px 0px;
-  width: 32px;
-  height: 32px;
+  background : url('../assets/icons/icons_spritesheet.png') no-repeat -32px 0px;
+  width      : 32px;
+  height     : 32px;
+  opacity    : 0.54;
 }
 
 .header .butGallery {
-  background: url('../assets/icons/icons_spritesheet.png') no-repeat -32px -32px;
-  width: 32px;
-  height: 32px;
+  background : url('../assets/icons/icons_spritesheet.png') no-repeat -32px -32px;
+  width      : 32px;
+  height     : 32px;
+  opacity    : 0.54;
+}
+
+.show{
+  opacity    : 1!important;
+}
+
+button.tooltips {
+  position : relative;
+  display  : inline;
+}
+button.ttFirst span {
+  position      : absolute;
+  width         :140px;
+  color         : #FFFFFF;
+  background    : #1E3C90;
+  height        : 30px;
+  line-height   : 30px;
+  text-align    : center;
+  border-radius : 6px;
+  top           : 40px;
+  left          : 58%;
+  margin-left   : -76px;
+  z-index       : 999;
+}
+button.tt span {
+  position      : absolute;
+  width         :140px;
+  color         : #FFFFFF;
+  background    : #1E3C90;
+  height        : 30px;
+  line-height   : 30px;
+  text-align    : center;
+  visibility    : hidden;
+  border-radius : 6px;
+}
+button.tooltips span:after {
+  content       : '';
+  position      : absolute;
+  bottom        : 100%;
+  left          : 50%;
+  margin-left   : -8px;
+  width         : 0; height: 0;
+  border-bottom : 8px solid #1E3C90;
+  border-right  : 8px solid transparent;
+  border-left   : 8px solid transparent;
+}
+button:hover.tooltips span {
+  visibility  : visible;
+  opacity     : 0.8;
+  top         : 40px;
+  left        : 58%;
+  margin-left : -76px;
+  z-index     : 999;
 }
 
 .butGalleryLoad {
   background      : url(../assets/images/loader.gif);
-  width           : 32px;
-  height          : 32px;
+  width           : 32px!important;
+  height          : 32px!important;
   background-size : 32px 32px;
+  opacity         : 0.54;
 }
 
 .header .butFav {
-  background: url('../assets/icons/icons_spritesheet.png') no-repeat 0px 0px;
-  width: 32px;
-  height: 32px;
+  background : url('../assets/icons/icons_spritesheet.png') no-repeat 0px 0px;
+  width      : 32px;
+  height     : 32px;
+  opacity    : 0.54;
 }
 
 .header .butLoad {
-  background: url('../assets/icons/icons_spritesheet.png') no-repeat 0px -32px;
-  width: 32px;
-  height: 32px;
+  background   : url('../assets/icons/icons_spritesheet.png') no-repeat 0px -32px;
+  width        : 32px;
+  height       : 32px;
   margin-right : 40px;
+  opacity      : 0.54;
 }
 
 .header__title {
