@@ -2,6 +2,42 @@
   "use strict";
 
   /**
+   * Analyse an URL search part, look for 'varToExtract=somevalue' in the string
+   * @param  {[type]} varToExtract variable we want to extract from the URL
+   * @return {[type]} the value associated to the varToExtract, or null if nothing was found
+   */
+  function extractFromUrl(varToExtract){
+    return new Promise((resolve, reject) => {
+      try{
+        let parser  = document.createElement('a');
+        parser.href = location.href;
+        let value   = parser.search.substring(1).split("&").filter(function(cell){ return (cell.indexOf(varToExtract + "=") !== -1);});
+        value       = (value.length > 0 ? value[0].split("=") : null);
+
+        resolve(value && value.length > 0 ? value[1] || null : null);
+      }
+      catch(err){
+        reject(err);
+      }
+    })
+  };
+
+  //Adapt UI depending if we are loading a model or have an empty scene
+  extractFromUrl("url").then((url) => {
+    if(!url){
+      document.getElementById("butGallery").classList.add("show");
+      document.getElementById("loaderDiv").classList.remove('make-container--visible');
+      document.getElementById("butGallery").title = "";
+      document.getElementById("butFav").classList.add("hide");
+    }
+    else{
+      document.getElementById("butGalleryTip").classList.add("hide");
+    }
+  }).catch((err) => {
+    console.log("[UI-Script] Error in checking URL", err);
+  });
+
+  /**
    * ===============================
    * ======== LOAD MODEL UI ========
    */
@@ -39,6 +75,10 @@
   document.getElementById('butGallery').addEventListener('click', function(event) {
     toggleDialog("gallery");
     toggleDialog("loadModel", true);
+    //Resize icons to be squared
+    [].forEach.call(document.getElementsByClassName("imgModelLink"), function(domElt){
+      domElt.height = domElt.width;
+    })
     event.stopPropagation();
   });
 

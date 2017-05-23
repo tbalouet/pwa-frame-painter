@@ -104,6 +104,7 @@ var ModelManager;
    * @param {object} data with type, url and id 
    */
   ModelManager.prototype.addToContainer = function(data){
+    //Force https in URLs when not on localhost
     let url = (location.host.indexOf("localhost") !== -1 ? "http://" : "https://") + location.host;
     url     = url + location.pathname + "?url=" + data.url;
 
@@ -214,6 +215,7 @@ var ModelManager;
 
         return response.json().then((obj) => {
           let imgLink = obj.data.link.replace(".png", "m.png");//Get the image medium thumbnail link
+          imgLink = imgLink.replace("http://", "https://");
 
           let model = [{
             "ssn"   : that.currentModel.url + "_" + type,

@@ -17,16 +17,7 @@
      * If so, load the matching model
      */
     Util.extractFromUrl("url").then((url) => {
-      if(!url){
-        document.getElementById("butGallery").classList.add("show");
-        document.getElementById("loaderDiv").classList.remove('make-container--visible');
-        document.getElementById("butGallery").title = "";
-        document.getElementById("butFav").classList.add("hide");
-      }
-      else{
-        document.getElementById("butGalleryTip").classList.add("hide");
-        modelManager.loadModel(url);
-      }
+      modelManager.loadModel(url);
     }).catch((err) => {
       console.log("[Error] Error in loading APainting", err);
     });

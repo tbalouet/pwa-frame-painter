@@ -197,16 +197,7 @@ module.exports = DBManager;
      * If so, load the matching model
      */
     Util.extractFromUrl("url").then((url) => {
-      if(!url){
-        document.getElementById("butGallery").classList.add("show");
-        document.getElementById("loaderDiv").classList.remove('make-container--visible');
-        document.getElementById("butGallery").title = "";
-        document.getElementById("butFav").classList.add("hide");
-      }
-      else{
-        document.getElementById("butGalleryTip").classList.add("hide");
-        modelManager.loadModel(url);
-      }
+      modelManager.loadModel(url);
     }).catch((err) => {
       console.log("[Error] Error in loading APainting", err);
     });
@@ -329,6 +320,7 @@ var ModelManager;
    * @param {object} data with type, url and id 
    */
   ModelManager.prototype.addToContainer = function(data){
+    //Force https in URLs when not on localhost
     let url = (location.host.indexOf("localhost") !== -1 ? "http://" : "https://") + location.host;
     url     = url + location.pathname + "?url=" + data.url;
 
@@ -439,6 +431,7 @@ var ModelManager;
 
         return response.json().then((obj) => {
           let imgLink = obj.data.link.replace(".png", "m.png");//Get the image medium thumbnail link
+          imgLink = imgLink.replace("http://", "https://");
 
           let model = [{
             "ssn"   : that.currentModel.url + "_" + type,
