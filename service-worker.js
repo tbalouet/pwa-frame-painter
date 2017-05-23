@@ -3,7 +3,7 @@
 
 //cacheVersion needs to be updated at each code iteration,
 //in order to replace the former cache in the browser
-const CACHE_VERSION = 5;
+const CACHE_VERSION = 6;
 const CURRENT_CACHES = {
   'PWA-Frame-Painter' : 'PWA-Frame-Painter-v' + CACHE_VERSION
 };
@@ -25,9 +25,8 @@ var filesToCache = [
   'public/assets/icons/icon-32x32.png',
   'public/assets/icons/icon-128x128.png',
   'public/assets/icons/icon-256x256.png',
-  'public/assets/icons/ic_add_white_24px.svg',
-  'public/assets/icons/qrcode.gif',
-  'public/assets/icons/gallery.png',
+  'public/assets/icons/icons_spritesheet.png',
+  'public/assets/images/loader.gif',
   //models
   'https://cdn.aframe.io/link-traversal/models/ground.json'
 ];
@@ -84,21 +83,23 @@ self.addEventListener('activate', function(event) {
  * or use fetch to get a copy from the network
  */
 self.addEventListener('fetch', function(event) {
-  event.respondWith(
-    caches.open(CURRENT_CACHES['PWA-Frame-Painter']).then(function(cache) {
-      return cache.match(event.request).then(function (response) {
-        return response || fetch(event.request).then(function(response) {
-          cache.put(event.request, response.clone()).catch((err) => {
-            console.log("[ServiceWorker] Error in adding to cache", err);
+  if(event.request.method !== "POST"){
+    event.respondWith(
+      caches.open(CURRENT_CACHES['PWA-Frame-Painter']).then(function(cache) {
+        return cache.match(event.request).then(function (response) {
+          return response || fetch(event.request).then(function(response) {
+            cache.put(event.request, response.clone()).catch((err) => {
+              console.log("[ServiceWorker] Error in adding to cache", err);
+            });
+            return response;
+          }).catch((err) => {
+            console.log("[ServiceWorker] Error in fetching response", err);
           });
-          return response;
         }).catch((err) => {
-          console.log("[ServiceWorker] Error in fetching response", err);
+          console.log("[ServiceWorker] Error in matching cache", err);
         });
       }).catch((err) => {
-        console.log("[ServiceWorker] Error in matching cache", err);
-      });
-    }).catch((err) => {
-      console.log("[ServiceWorker] Error in resolving fetch", err);
-    }));
+        console.log("[ServiceWorker] Error in resolving fetch", err);
+      }));
+  }
 });

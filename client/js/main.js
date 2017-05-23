@@ -2,11 +2,13 @@
 // found in the LICENSE file.
 (function(){
 	"use strict";
-  var Util = require("./util.js");
+  var Util         = require("./util.js");
   var ModelManager = require("./modelManager.js");
+
   //Handling the AFrame components in a different file for clarity
   require("./aframeComponents.js");
 
+  //Create the modelManager to handle A-Painter models
   window.modelManager = new ModelManager();
 
   window.onload = function(){
@@ -15,16 +17,12 @@
      * If so, load the matching model
      */
     Util.extractFromUrl("url").then((url) => {
-      if(url){
-        let newModel = document.createElement("a-entity");
-        newModel.setAttribute("a-painter-loader", "src:" + url);
-        newModel.setAttribute("position", "0 0 -2");
-        document.getElementsByTagName("a-scene")[0].appendChild(newModel);
-      }
+      modelManager.loadModel(url);
     }).catch((err) => {
       console.log("[Error] Error in loading APainting", err);
     });
 
+    //Launch a Service Worker (if possible) for Offline handling
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker
         .register('./service-worker.js')

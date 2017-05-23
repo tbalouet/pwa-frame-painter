@@ -294,6 +294,7 @@
 	      } else {
 	        self.loadJSON(JSON.parse(buffer));
 	      }
+	      self.el.emit('model-loaded', {});
 	    });
 	  }
 

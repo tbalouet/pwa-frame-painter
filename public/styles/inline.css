@@ -15,16 +15,19 @@ body {
   color            : #444;
 }
 
-/*=====QR CODE=====*/
-
-#qrcodeDiv{
-  position   : absolute;
-  top        : 20%;
-  z-index    : 1;
-  width      : 100%;
-  text-align : center;
-  display    : none;
+.loader {
+  top      : calc(50% - 50px);
+  left      : calc(50% - 50px);
+  position : fixed;
+  width: 100px;
+  height: 100px;
 }
+
+.hide{
+  display: none;
+}
+
+/*=====QR CODE=====*/
 
 .close {
   position: relative;
@@ -44,7 +47,7 @@ body {
   top: 50%;
   left: 0;
   margin-top: -1px;
-  background: #000;
+  background: #3f51b5;
 }
 .close::before {
   -webkit-transform: rotate(45deg);
@@ -69,6 +72,21 @@ body {
 }
 
 /*=====HEADER=====*/
+
+#qrCodeDiv{
+  text-align: center;
+}
+
+#qrCodeDiv span{
+  top         : 15%;
+  position    : fixed;
+  margin-left : -25px;
+}
+
+#qrCodeDiv div{
+  top: 20%;
+  position: relative;
+}
 
 .header {
   width                 : 100%;
@@ -97,9 +115,6 @@ body {
   width              : 24px;
   height             : 24px;
   margin-right       : 16px;
-  text-indent        : -30000px;
-  overflow           : hidden;
-  opacity            : 0.54;
   -webkit-transition : opacity 0.333s cubic-bezier(0, 0, 0.21, 1);
   transition         : opacity 0.333s cubic-bezier(0, 0, 0.21, 1);
   border             : none;
@@ -114,17 +129,94 @@ body {
   opacity            : 0.54;
 }
 
-.header #butQRCode {
-  background: url(../assets/icons/qrcode.gif) center center no-repeat; 
+.header .butQRCode {
+  background : url('../assets/icons/icons_spritesheet.png') no-repeat -32px 0px;
+  width      : 32px;
+  height     : 32px;
+  opacity    : 0.54;
 }
 
-.header #butGallery {
-  background: url(../assets/icons/gallery.png) center center no-repeat; 
+.header .butGallery {
+  background : url('../assets/icons/icons_spritesheet.png') no-repeat -32px -32px;
+  width      : 32px;
+  height     : 32px;
+  opacity    : 0.54;
 }
 
-.header #butLoad {
-  background   : url(../assets/icons/ic_add_white_24px.svg) center center no-repeat; 
+.show{
+  opacity    : 1!important;
+}
+
+button.tooltips {
+  position : relative;
+  display  : inline;
+}
+button.ttFirst span {
+  position      : absolute;
+  width         :140px;
+  color         : #FFFFFF;
+  background    : #1E3C90;
+  height        : 30px;
+  line-height   : 30px;
+  text-align    : center;
+  border-radius : 6px;
+  top           : 40px;
+  left          : 58%;
+  margin-left   : -76px;
+  z-index       : 999;
+}
+button.tt span {
+  position      : absolute;
+  width         :140px;
+  color         : #FFFFFF;
+  background    : #1E3C90;
+  height        : 30px;
+  line-height   : 30px;
+  text-align    : center;
+  visibility    : hidden;
+  border-radius : 6px;
+}
+button.tooltips span:after {
+  content       : '';
+  position      : absolute;
+  bottom        : 100%;
+  left          : 50%;
+  margin-left   : -8px;
+  width         : 0; height: 0;
+  border-bottom : 8px solid #1E3C90;
+  border-right  : 8px solid transparent;
+  border-left   : 8px solid transparent;
+}
+button:hover.tooltips span {
+  visibility  : visible;
+  opacity     : 0.8;
+  top         : 40px;
+  left        : 58%;
+  margin-left : -76px;
+  z-index     : 999;
+}
+
+.butGalleryLoad {
+  background      : url(../assets/images/loader.gif);
+  width           : 32px!important;
+  height          : 32px!important;
+  background-size : 32px 32px;
+  opacity         : 0.54;
+}
+
+.header .butFav {
+  background : url('../assets/icons/icons_spritesheet.png') no-repeat 0px 0px;
+  width      : 32px;
+  height     : 32px;
+  opacity    : 0.54;
+}
+
+.header .butLoad {
+  background   : url('../assets/icons/icons_spritesheet.png') no-repeat 0px -32px;
+  width        : 32px;
+  height       : 32px;
   margin-right : 40px;
+  opacity      : 0.54;
 }
 
 .header__title {
@@ -140,13 +232,13 @@ body {
 /*=====DIALOG CONTAINER=====*/
 
 .dialog-container {
+  display            : none;
   background         : rgba(0, 0, 0, 0.57);
   position           : fixed;
   left               : 0;
   top                : 0;
   width              : 100%;
   height             : 100%;
-  opacity            : 0;
   pointer-events     : none;
   will-change        : opacity;
   -webkit-transition : opacity 0.333s cubic-bezier(0, 0, 0.21, 1);
@@ -155,7 +247,7 @@ body {
 }
 
 .make-container--visible {
-  opacity        : 1!important;
+  display        : block!important;
   pointer-events : auto; 
 }
 
@@ -203,6 +295,7 @@ body {
 /*=====MODEL LIST=====*/
 
 .model-container {
+  display       :  none;
   padding       : 16px;
   position      : absolute;
   box-sizing    : border-box;
@@ -217,7 +310,6 @@ body {
   font-family   : "Roboto", "Helvetica", "Arial", sans-serif;
   overflow-y    : scroll;
   max-height    : 90%;
-  opacity       : 0;
 }
 
 .containerRow span{
@@ -234,6 +326,7 @@ body {
   width         : 17%;
   margin        : 1%;
   max-width     : 128px;
+  max-height    : 128px;
   cursor        : pointer;
   border-radius : 10px;
 }
