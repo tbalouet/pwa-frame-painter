@@ -214,6 +214,10 @@ var ModelManager;
   var DBManager = require("./dbManager.js");
   var Util = require("./util.js");
 
+  /**
+   * Different types of Models saved in the Gallery container
+   * @type {Object}
+   */
   const TYPES = {
     "FEATURED" : 0,
     "RECENT"   : 1,
@@ -313,20 +317,16 @@ var ModelManager;
       location.href = url;
     });
 
-    switch(data.type){
-      case TYPES.FEATURED :
-        document.getElementById("featuredRow").appendChild(imgLinkObj);
-        break;
-      case TYPES.RECENT :
-        let firstChild = document.getElementById("recentRow").children > 1 ? document.getElementById("recentRow").children[1] : null;
-        if(firstChild){
-          document.getElementById("recentRow").insertBefore( imgLinkObj, firstChild );
-        }
-        else{
-          document.getElementById("recentRow").appendChild(imgLinkObj);
-        }
-        break;
+    let divID = (data.type === TYPES.FEATURED ? "featuredRow" : (data.type === TYPES.RECENT ? "recentRow" : "starredRow"));
+
+    let firstChild = (document.getElementById(divID).children.length > 1 ? document.getElementById(divID).children[1] : null);
+    if(firstChild){
+      document.getElementById(divID).insertBefore( imgLinkObj, firstChild );
     }
+    else{
+      document.getElementById(divID).appendChild(imgLinkObj);
+    }
+
     return true;
   };
 
@@ -366,7 +366,20 @@ var ModelManager;
     this.dbManager.getEntry(this.dbStructure.tableArray[0].name, keyValue).then((val) => {
       if(val !== undefined){
         console.log("[ModelManager] model already exists");
+        document.getElementById("loaderDiv").classList.remove('make-container--visible');
+
+        that.currentModel = val;
         return true;
+      }
+
+      if(that.currentModel && that.currentModel.thumb){
+        let model = [{
+          "ssn"   : that.currentModel.url + "_" + type,
+          "url"   : that.currentModel.url, 
+          "thumb" : that.currentModel.thumb, 
+          "type"  : type
+        }];
+        return that.onModelData(model);
       }
 
       let canvas = document.querySelector('a-scene').components.screenshot.getCanvas('perspective');
@@ -397,15 +410,8 @@ var ModelManager;
             "thumb" : imgLink, 
             "type"  : type
           }];
-          return that.registerData(model).then(() => {
-            console.log("[ModelManager] Model thumb saved");
-            return true;
-          }).then(() => {
-            return that.addToContainer(model[0]);
-          }).catch((err) => {
-            console.log("[ModelManager] Error in registering data", err);
-            return false;
-          })
+          that.currentModel = model[0];
+          return that.onModelData(model);
         })
       }).catch((errResponse) => {
         console.log("[ModelManager] Error in posting request", errResponse.statusText, "Error " + errResponse.status);
@@ -413,6 +419,21 @@ var ModelManager;
     }).catch((err) => {
       console.log("[ModelManager] Error in saving thumb", err);
     });
+  };
+
+  ModelManager.prototype.onModelData = function(model){
+    var that = this;
+
+    return this.registerData(model).then(() => {
+      console.log("[ModelManager] Model thumb saved");
+      document.getElementById("loaderDiv").classList.remove('make-container--visible');
+      return true;
+    }).then(() => {
+      return that.addToContainer(model[0]);
+    }).catch((err) => {
+      console.log("[ModelManager] Error in registering data", err);
+      return false;
+    })
   };
 })();
 

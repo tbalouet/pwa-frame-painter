@@ -26,9 +26,8 @@ var filesToCache = [
   'public/assets/icons/icon-32x32.png',
   'public/assets/icons/icon-128x128.png',
   'public/assets/icons/icon-256x256.png',
-  'public/assets/icons/ic_add_white_24px.svg',
-  'public/assets/icons/qrcode.gif',
-  'public/assets/icons/gallery.png',
+  'public/assets/icons/icons_spritesheet.png',
+  'public/assets/images/loader.gif',
   //models
   'https://cdn.aframe.io/link-traversal/models/ground.json'
 ];

@@ -15,16 +15,15 @@ body {
   color            : #444;
 }
 
-/*=====QR CODE=====*/
-
-#qrcodeDiv{
-  position   : absolute;
-  top        : 20%;
-  z-index    : 1;
-  width      : 100%;
-  text-align : center;
-  display    : none;
+.loader {
+  top      : calc(50% - 50px);
+  left      : calc(50% - 50px);
+  position : fixed;
+  width: 100px;
+  height: 100px;
 }
+
+/*=====QR CODE=====*/
 
 .close {
   position: relative;
@@ -44,7 +43,7 @@ body {
   top: 50%;
   left: 0;
   margin-top: -1px;
-  background: #000;
+  background: #3f51b5;
 }
 .close::before {
   -webkit-transform: rotate(45deg);
@@ -69,6 +68,21 @@ body {
 }
 
 /*=====HEADER=====*/
+
+#qrCodeDiv{
+  text-align: center;
+}
+
+#qrCodeDiv span{
+  top         : 15%;
+  position    : fixed;
+  margin-left : -25px;
+}
+
+#qrCodeDiv div{
+  top: 20%;
+  position: relative;
+}
 
 .header {
   width                 : 100%;
@@ -115,15 +129,27 @@ body {
 }
 
 .header #butQRCode {
-  background: url(../assets/icons/qrcode.gif) center center no-repeat; 
+  background: url('../assets/icons/icons_spritesheet.png') no-repeat -32px 0px;
+  width: 32px;
+  height: 32px;
 }
 
 .header #butGallery {
-  background: url(../assets/icons/gallery.png) center center no-repeat; 
+  background: url('../assets/icons/icons_spritesheet.png') no-repeat -32px -32px;
+  width: 32px;
+  height: 32px;
+}
+
+.header #butFav {
+  background: url('../assets/icons/icons_spritesheet.png') no-repeat 0px 0px;
+  width: 32px;
+  height: 32px;
 }
 
 .header #butLoad {
-  background   : url(../assets/icons/ic_add_white_24px.svg) center center no-repeat; 
+  background: url('../assets/icons/icons_spritesheet.png') no-repeat 0px -32px;
+  width: 32px;
+  height: 32px;
   margin-right : 40px;
 }
 

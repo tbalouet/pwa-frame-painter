@@ -30,15 +30,20 @@
     <h1 class="header__title">Progressive Web A-Painter</h1>
     <button id="butQRCode" class="headerButton" title="Get page QR code"></button>
     <button id="butGallery" class="headerButton" title="Open gallery"></button>
+    <button id="butFav" class="headerButton" title="Add to favorites"></button>
     <button id="butLoad" class="headerButton" title="Load model"></button>
   </header>
 
-  <div id="qrcodeDiv">
+  <div id="loaderDiv" class="dialog-container make-container--visible">
+    <img class="loader" src="public/assets/images/loader.gif" />
+  </div>
+
+  <div id="qrCodeDiv" class="dialog-container">
     <span class="small close rounded heavy"></span>
     <div id="qrcode"></div>
   </div>
 
-  <div class="dialog-container">
+  <div id="loadModel" class="dialog-container">
     <div class="dialog">
       <div class="dialog-title">Load a model's URL</div>
       <div class="dialog-body">
@@ -51,7 +56,7 @@
     </div>
   </div>
 
-  <div class="model-container">
+  <div id="gallery" class="model-container">
     <span id="closeModel" class="small close rounded heavy"></span>
     <div id="featuredRow" class="containerRow">
       <span>Featured</span>

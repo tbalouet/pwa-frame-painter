@@ -3,37 +3,49 @@
 
   document.getElementById('butLoad').addEventListener('click', function() {
     // Open/show the load new model dialog
-    toggleLoadDialog(true, "dialog-container");
+    toggleDialog("loadModel");
   });
 
   document.getElementById('butLoadURL').addEventListener('click', function() {
     // Load the new model
     var url = document.getElementById('loadURL').value;
     location.href = (location.host.indexOf("localhost") !== -1 ? "http://" : "https://") + location.host + location.pathname + "?url=" + url;
-    toggleLoadDialog(false, "dialog-container");
+    toggleDialog("loadModel");
   });
 
   document.getElementById('butLoadCancel').addEventListener('click', function() {
     // Close the load new model dialog
-    toggleLoadDialog(false);
+    toggleDialog("loadModel");
   });
 
   document.getElementById('butGallery').addEventListener('click', function() {
     // Open/show the gallery container
-    toggleLoadDialog(true, "model-container");
+    toggleDialog("gallery");
+  });
+
+  document.getElementById('butFav').addEventListener('click', function() {
+    // Add current model to favorites
+    if(modelManager){
+      modelManager.saveThumb(2);//ModelManager.TYPES.STARRED
+    }
   });
 
   document.getElementById('closeModel').addEventListener('click', function() {
     // Close the gallery container
-    toggleLoadDialog(false, "model-container");
+    toggleDialog("gallery");
   });
 
   // Toggles the visibility of the load new model dialog.
-  function toggleLoadDialog(visible, className) {
-    if (visible) {
-      document.getElementsByClassName(className)[0].classList.add('make-container--visible');
+  function toggleDialog(eltID) {
+    let domElt = document.getElementById(eltID);
+    if(!domElt){
+      return;
+    }
+
+    if (domElt.classList.contains('make-container--visible')) {
+      domElt.classList.remove('make-container--visible');
     } else {
-      document.getElementsByClassName(className)[0].classList.remove('make-container--visible');
+      domElt.classList.add('make-container--visible');
     }
   };
 
@@ -47,10 +59,10 @@
     qr.make();
     document.getElementById('qrcode').innerHTML = qr.createImgTag(4);
 
-    document.getElementById("qrcodeDiv").style.display = "block";
+    toggleDialog("qrCodeDiv");
 
     document.body.addEventListener("click", function(event){ 
-      document.getElementById("qrcodeDiv").style.display = "none";
+      toggleDialog("qrCodeDiv");
     });
 
     return false;
