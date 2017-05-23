@@ -192,6 +192,9 @@ module.exports = DBManager;
      */
     Util.extractFromUrl("url").then((url) => {
       modelManager.loadModel(url);
+      if(!url){
+        document.getElementById("loaderDiv").classList.remove('make-container--visible');
+      }
     }).catch((err) => {
       console.log("[Error] Error in loading APainting", err);
     });
