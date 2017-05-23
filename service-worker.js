@@ -3,7 +3,7 @@
 
 //cacheVersion needs to be updated at each code iteration,
 //in order to replace the former cache in the browser
-const CACHE_VERSION = 6;
+const CACHE_VERSION = 7;
 const CURRENT_CACHES = {
   'PWA-Frame-Painter' : 'PWA-Frame-Painter-v' + CACHE_VERSION
 };

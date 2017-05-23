@@ -110,15 +110,20 @@ var DBManager;
   DBManager.prototype.onUpgradeNeeded = function(event) {
     this.db = event.target.result;
 
-    //Run through the tables to add them to the Database
-    for(let key in this.tableArray){
-      let aTable = this.tableArray[key];
+    try{
+      //Run through the tables to add them to the Database
+      for(let key in this.tableArray){
+        let aTable = this.tableArray[key];
 
-      //Create an ObjectStore to handle models URLs
-      let objModelStore = this.db.createObjectStore(aTable.name, { keyPath: aTable.keyPath });
-      for(let i = 0, len = aTable.index.length; i < len; ++i){
-        objModelStore.createIndex(aTable.index[i].name, aTable.index[i].name, { unique: aTable.index[i].unique });
-      }
+        //Create an ObjectStore to handle models URLs
+        let objModelStore = this.db.createObjectStore(aTable.name, { keyPath: aTable.keyPath });
+        for(let i = 0, len = aTable.index.length; i < len; ++i){
+          objModelStore.createIndex(aTable.index[i].name, aTable.index[i].name, { unique: aTable.index[i].unique });
+        }
+      }      
+    }
+    catch(err){
+      console.log("[DBManager] Error in creating DB", err);
     }
   };
 
