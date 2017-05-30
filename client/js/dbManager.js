@@ -1,104 +1,52 @@
 var DBManager;
 (function(){
   "use strict";
+  var Dexie = require("./dexie.js");
 
   /**
    * Object to handle data storage in an IndexedDB
    */
   DBManager = function(opts){
-    var that                = this;
+    var that = this;
 
-    this.tableArray         = opts.tableArray;
-    let request             = window.indexedDB.open(opts.dbName, opts.dbVersion);
-    request.onupgradeneeded = this.onUpgradeNeeded.bind(this);
+    let promiseArr = [];
+    this.db = new Dexie(opts.dbName);
+    this.modelName = opts.tableModel.name;
 
-    request.onsuccess       = function(event){
-      that.db = event.target.result;
-      opts.onCompleteCB(event);
-    }
-    
-    //DB creation wasn't allowed or failed, we need fallback
-    request.onerror         = function(event) {
-      console.log("[DBManager] Error", event.target.error);
-    };
-  };
+    let table = {};
+    table[that.modelName] = (opts.tableModel.keyPath + "," + opts.tableModel.index.map(function(key){ return key.name;}).join(","))
 
-  /**
-   * Function called to handle changes in the DB structure
-   * @param  {[type]} event [description]
-   * @return {[type]}       [description]
-   */
-  DBManager.prototype.onUpgradeNeeded = function(event) {
-    this.db = event.target.result;
+    this.db.version(opts.dbVersion).stores(table);
 
-    try{
-      //Run through the tables to add them to the Database
-      for(let key in this.tableArray){
-        let aTable = this.tableArray[key];
-
-        //Create an ObjectStore to handle models URLs
-        let objModelStore = this.db.createObjectStore(aTable.name, { keyPath: aTable.keyPath });
-        for(let i = 0, len = aTable.index.length; i < len; ++i){
-          objModelStore.createIndex(aTable.index[i].name, aTable.index[i].name, { unique: aTable.index[i].unique });
-        }
-      }      
-    }
-    catch(err){
-      console.log("[DBManager] Error in creating DB", err);
-    }
+    this.db.open().catch(function(error) {
+      console.log("[DBManager] Error", error);
+    });
   };
 
   /**
    * Function to browse the object store and deploy a function on each key value
-   * @param  {string} tableName the name of the table to browse
    * @param  {func} cbFunc    the function to apply to each retrieved line
    */
-  DBManager.prototype.browseObjStore = function(tableName, cbFunc){
-    return new Promise((resolve, reject) => {
-      if(!this.db){
-        reject("DB wasn't initialized properly, aborting browsing");
-      }
-
-      let objStore = this.db.transaction(tableName).objectStore(tableName);
-
-      //Reads all the entries in the model table and create icons to access it
-      objStore.openCursor().onsuccess = function(event) {
-        let cursor = event.target.result;
-        if (cursor) {
-          cbFunc(cursor.value);
-          cursor.continue();
-        }
-        else{
-          resolve(true);
-        }
-      };
-    })
+  DBManager.prototype.browseObjStore = function(cbFunc){
+    return this.db[this.modelName].each(cbFunc);
   };
 
   /**
    * Promise to check if a KeyPair already exists in a table
-   * @param  {string} tableName name of the table
-   * @param  {object} keyPair   object {key: ..., value: ...} defining what we're looking for
+   * @param  {object} ssnKey   key defining what we're looking for
    * @return {[type]}           [description]
    */
-  DBManager.prototype.getEntry = function(tableName, ssnKey){
-    return new Promise((resolve, reject) => {
-      if(!this.db){
-        reject("DB wasn't initialized properly, aborting getEntry");
-      }
+  DBManager.prototype.getEntry = function(ssnKey){
+    return this.db[this.modelName].get(ssnKey);
+  }
 
-      let objStore = this.db.transaction(tableName).objectStore(tableName);
-
-      // get record by key from the object store
-      let objStoreReq = objStore.get(ssnKey);
-
-      objStoreReq.onsuccess = function(event) {
-        resolve(event.target.result);
-      };
-      objStoreReq.onerror = function(event) {
-        reject(event);
-      };
-    })
+  /**
+   * Promise to add a KeyPair in the model table
+   * @param  {object} row object we want to insert in the table
+   * @return {[type]}           [description]
+   */
+  DBManager.prototype.addEntry = function(row){
+    return this.db[this.modelName].add(row);
   }
 })();
 

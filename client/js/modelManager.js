@@ -33,8 +33,8 @@ var ModelManager;
     this.currentModel = undefined;
     this.dbStructure  = {
       dbName : "pwaFramePainterDB",
-      dbVersion : 4,
-      tableArray : [{
+      dbVersion : 0.4,
+      tableModel : {
         name : "models",
         keyPath : "ssn",
         index : [
@@ -42,24 +42,16 @@ var ModelManager;
           { name : "thumb", unique : false},
           { name : "type", unique : false},
         ],
-      }],
-      onCompleteCB : this.onDBReady.bind(this)
+      }
     };
 
     this.dbManager = new DBManager(this.dbStructure);
-  };
 
-  /**
-   * Method to fill the database with the featured Models if this hasn't been done
-   * @param  {[type]} event [description]
-   * @return {[type]}       [description]
-   */
-  ModelManager.prototype.onDBReady = function(event) {
     console.log("[ModelManager] DB structure created, adding fixed values");
     this.registerData(featuredModels, false).catch((err) => {
       console.log("[ModelManager] Error in populating DB and Container", err);
     }).then(() => {
-      return this.dbManager.browseObjStore(this.dbStructure.tableArray[0].name, this.addToContainer.bind(this));
+      return this.dbManager.browseObjStore(this.addToContainer.bind(this));
     })
   };
 
@@ -75,19 +67,14 @@ var ModelManager;
         reject("DB wasn't initialized properly, aborting data registering");
       }
 
-      let tableName = this.dbStructure.tableArray[0].name;
       let promArray = [];
       for (let i in dataArray) {
         let keyValue = dataArray[i].url + "_" + dataArray[i].type;
 
-        promArray.push(this.dbManager.getEntry(this.dbStructure.tableArray[0].name, keyValue).then((val) => {
+        promArray.push(this.dbManager.getEntry(keyValue).then((val) => {
           //Check if entries already belong to the DB
           if(val === undefined){
-            let objModelStore = that.dbManager.db.transaction(tableName, "readwrite").objectStore(tableName);
-            let idbObject = objModelStore.add(dataArray[i]);
-            idbObject.onerror = ((err) => {
-              console.log("[ModelManager] Error in adding field", dataArray[i], err.target.error);
-            });
+            return that.dbManager.addEntry(dataArray[i]);
           }
           return true;
         }));
