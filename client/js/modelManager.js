@@ -33,7 +33,6 @@ var ModelManager;
     this.currentModel = undefined;
     this.dbStructure  = {
       dbName : "pwaFramePainterDB",
-      dbVersion : 0.4,
       tableModel : {
         name : "models",
         keyPath : "ssn",
@@ -156,7 +155,7 @@ var ModelManager;
       return;
     }
 
-    this.dbManager.getEntry(this.dbStructure.tableArray[0].name, keyValue).then((val) => {
+    this.dbManager.getEntry(keyValue).then((val) => {
       if(val !== undefined){
         console.log("[ModelManager] model already exists");
         that.currentModel = val;

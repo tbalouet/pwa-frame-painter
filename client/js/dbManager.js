@@ -14,11 +14,20 @@ var DBManager;
     this.modelName = opts.tableModel.name;
 
     let table = {};
-    table[that.modelName] = (opts.tableModel.keyPath + "," + opts.tableModel.index.map(function(key){ return key.name;}).join(","))
+    table[that.modelName] = (opts.tableModel.keyPath + "," + opts.tableModel.index.map(function(key){ return key.name;}).join(","));
 
-    this.db.version(opts.dbVersion).stores(table);
+    this.db.version(0.3).stores({
+      models : "ssn,url,type"
+    });
+    this.db.version(0.4).stores(table).upgrade(function (trans) {
+      trans.models.toCollection().modify (function (model) {
+        model.ssn = model.url + "_" + model.type;
+      });
+    });
 
-    this.db.open().catch(function(error) {
+    this.db.open().then(() => {
+      console.log("[DBManager] DB open");
+    }).catch(function(error) {
       console.log("[DBManager] Error", error);
     });
   };

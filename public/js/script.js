@@ -93,11 +93,20 @@ var DBManager;
     this.modelName = opts.tableModel.name;
 
     let table = {};
-    table[that.modelName] = (opts.tableModel.keyPath + "," + opts.tableModel.index.map(function(key){ return key.name;}).join(","))
+    table[that.modelName] = (opts.tableModel.keyPath + "," + opts.tableModel.index.map(function(key){ return key.name;}).join(","));
 
-    this.db.version(opts.dbVersion).stores(table);
+    this.db.version(0.3).stores({
+      models : "ssn,url,type"
+    });
+    this.db.version(0.4).stores(table).upgrade(function (trans) {
+      trans.models.toCollection().modify (function (model) {
+        model.ssn = model.url + "_" + model.type;
+      });
+    });
 
-    this.db.open().catch(function(error) {
+    this.db.open().then(() => {
+      console.log("[DBManager] DB open");
+    }).catch(function(error) {
       console.log("[DBManager] Error", error);
     });
   };
@@ -4809,7 +4818,6 @@ var ModelManager;
     this.currentModel = undefined;
     this.dbStructure  = {
       dbName : "pwaFramePainterDB",
-      dbVersion : 0.4,
       tableModel : {
         name : "models",
         keyPath : "ssn",
@@ -4932,7 +4940,7 @@ var ModelManager;
       return;
     }
 
-    this.dbManager.getEntry(this.dbStructure.tableArray[0].name, keyValue).then((val) => {
+    this.dbManager.getEntry(keyValue).then((val) => {
       if(val !== undefined){
         console.log("[ModelManager] model already exists");
         that.currentModel = val;
